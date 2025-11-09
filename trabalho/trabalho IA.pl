@@ -160,19 +160,29 @@ classificacao_consulta(ConsultaId, Possiveis) :-
 
 % Versão que lida com excecoes Múltiplas
 classificacao_consulta_aggregate(ConsultaId, PossFinal) :-
-    findall(Pos, (
-        (excecao(consulta(ConsultaId, D, P, I, S, DI, PU)) ->
-            ( integer(S), classifica_ta(S, DI, Cl), Pos = [Cl] ;
-              ( S = impreciso(Inf,Sup) -> findall(C, (between(Inf,Sup,SV), classifica_ta(SV, DI, C)), CList), sort(CList, Pos)
-              ; Pos = [desconhecido])
-        ; (consulta(ConsultaId, D, P, I, S, DI, PU) ->
-            ( integer(S) -> (classifica_ta(S, DI, Cl) -> Pos=[Cl] ; Pos=[desconhecido]) ;
-              ( S = impreciso(Inf,Sup) -> findall(C3, (between(Inf,Sup,SV2), classifica_ta(SV2, DI, C3)), CList2), sort(CList2, Pos)
-                ; Pos=[desconhecido] )
+    findall(Pos,
+        (
+            ( excecao(consulta(ConsultaId, D, P, I, S, DI, PU)) ->
+                ( integer(S) ->
+                    ( classifica_ta(S, DI, Cl) -> Pos = [Cl] ; Pos = [desconhecido] )
+                ; S = impreciso(Inf,Sup) ->
+                    ( findall(C, (between(Inf,Sup,SV), classifica_ta(SV, DI, C)), CList),
+                      sort(CList, Pos) )
+                ; Pos = [desconhecido]
+                )
+            ; ( consulta(ConsultaId, D, P, I, S, DI, PU) ->
+                ( integer(S) ->
+                    ( classifica_ta(S, DI, Cl) -> Pos = [Cl] ; Pos = [desconhecido] )
+                ; S = impreciso(Inf,Sup) ->
+                    ( findall(C3, (between(Inf,Sup,SV2), classifica_ta(SV2, DI, C3)), CList2),
+                      sort(CList2, Pos) )
+                ; Pos = [desconhecido]
+                )
+              ; Pos = [desconhecido]
+              )
             )
-          ; Pos=[desconhecido] )
-        )
-    ), Lista),
+        ),
+        Lista),
     flatten(Lista, Flat),
     ( Flat == [] -> PossFinal = [desconhecido] ; sort(Flat, PossFinal) ).
 
